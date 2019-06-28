@@ -152,3 +152,106 @@
       5. asp-for
          1. Used for Model Binding means, it will bind the model proerty with HTML input element e.g. text/radio/check, ect.
          2. This is also used for <select> element 
+
+#=============================================================================
+
+# ASP.NET Core Programming Features
+1. Creation of Custom Server-Side Validators
+   1. Standard Data-Annoitations
+      1. ValidationAttributes class with its IsValid() method
+      2. Requires, NunericForma, Email, Compare, RegEx, etc.
+   2. Custom Data-Annotations
+      1. Create class derived from ValidationAttribute and override IsValid() ,method 
+   3. Explict Validations using Conditional Statements in Action Method
+   4. Process based AKA Execution time validations using Exceptions
+      1. try..catch block and return the error View, Views/Shared/Error.cshtml
+      2. Modify the ErrorViewModel class by adding custom properties like
+         1. ControllerName, ActionName, Exception, etc.
+2. Action Filters
+   1. Priority wise --> Global-->Controller-->Action
+   2. IActionFilter interface and ActionFilterAttribute class
+      1. Override or implement
+         1. ActionExecutingContext
+         2. ActionExecutedContext
+         3. ResultExecutingContext
+         4. ResultExecutedContext
+      2. All these class have the final base class as 'ActionContext' 
+         1. public ActionDescriptor ActionDescriptor { get; set; }
+            1. Defines the Action Name and its type
+         2. public HttpContext HttpContext { get; set; }
+            1. Represent current Http Request Context
+         3. public ModelStateDictionary ModelState { get; }
+            1. Represents the Posted Model Validity
+         4. public RouteData RouteData { get; set; }
+            1. The Cuurent Route with Controll/Action/URI Parameter
+      3. Adding Custom Filter
+         1.     services.AddMvc(
+                  options => options.Filters.Add(typeof(LogFilterAttribute))
+                ).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+  1. Custom Exception Filter
+     1. IExceptioFilter Interface
+        1. ExceptionFilterAttribute class
+           1. OnException() method
+              1. ExceptionContext as input parameter
+        2. ViewDataDictionary for passing data to View for Exceptions
+           1. IModelMetadataProvider interface to reaceive Model metadata
+           2. ModelStateDictionary object
+3. Security and Identity Management
+   1. The 'AuthorizeAttribute' class is used to provide secure access to ASP.NET Core apps
+   2. Microsoft.AspNetCore.Identity
+      1. UserManager
+         1. Manages Users using IdentityUser Class
+      2. RoleManager
+         1. Manages Roles using IdentityRole class
+      3. SignInManager
+         1. Used to manage User Sign-In process
+   3. Use AddDefaultIdnetity<IdentityUser>() service method only for User Access, default authentication
+   4. Use AddIdentity<IdentityUser, IdentityRole>() service method for Role Based Security with Role policies
+   5. UseAuthentication() Middleware method to provide secure access to the application
+      1. Defining Authorization Policies
+      2.  services.AddAuthorization(
+                   options => {
+                       options.AddPolicy("readpolicy", policy =>
+                       {
+                           policy.RequireRole("Admin", "Manager", "Clerk");
+                       });
+
+                       options.AddPolicy("writepolicy", policy =>
+                       {
+                           policy.RequireRole("Admin", "Manager");
+                       });
+                   }
+                );
+      3. Applying policies on Controller Action methods
+         1. [Authorize(Policy = "writepolicy")]
+      4.    
+4. Creation of WEB API
+   1. ASP.NET Core 2.x 
+      1. The ControllerBase class as base class for API Controller
+      2. The 'ApiControllerAttribute' class is applied on API Controller
+      3. The Methods are Http GET/POST/PUT/DELETE methods those are mapped with the HttpMethod Attributes like
+         1. HttpGetAttribute
+         2. HttpPotsAttribute
+         3. HttpPurAttribute
+         4. HttpDeleteAttribute
+      4. All these class have 2 ctors
+         1. HttpGet()
+         2. HttpGet(string template)
+            1. template is URI parameters
+               1. http://server/api/Department/10
+   2. OkResult() and OkObjectResult() are used to return success response from WEB API
+      1. OkResult, derived from StatusCodeResult
+      2. ObObjectResult, derived from ObjectResult, this provides JSON serialization
+   3. The ApiControllerAttribute class, will be used to Map the Posted data with CLR object used as input parameter to HttpPost and HttpPut request. If ApiController is not used then the Posted data can be mepped with CLR object using [FromBody] binder   
+5. Creation of Middlewares 
+   1. Middlewares are classed used for global level valu addition in the ASP.NET COre request processing
+      1. E.g. StaticFiles, Authentication, Mvc, etc.
+      2. Cors, CookiePolicy, etc
+   2. To Create a Cuatom Middleware follow steps
+      1. Class must be ctor injected using RequestDelegate
+         1. This delegate executes HttpContext parameer method
+      2. Class must contains Invoke() / InvokeAsync() method having HttpContext as input parameter
+         1. This method will contains logic for Middleware
+   3. Craete an Extension class that will have an extension method for IApplicationBuilder interface.
+      1. Using UseMiddleware<T> method of IApplicationBuilder, load the custom middleware in the current application
+         1. T is the Custom Middleware class
